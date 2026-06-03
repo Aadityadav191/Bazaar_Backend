@@ -18,6 +18,7 @@ app.use(express.json()) ;
 
 // Test Route
 app.use('/api/user', userRoutes);
+app.use("/uploads", express.static("uploads"));
 
 app.listen(PORT, () => {
   console.log(`Server is running beautifully on http://localhost:${PORT}`);

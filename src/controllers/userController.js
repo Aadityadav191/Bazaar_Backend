@@ -139,7 +139,7 @@ const loginUser = async (req, res) => {
     }
 
     // Generate JWT token
-    const token = generateToken(user._id,);
+    const token = generateToken(user._id);
 
     res.status(200).json({
       success: true,
@@ -156,28 +156,26 @@ const loginUser = async (req, res) => {
   }
 };
 
-
 // Upload Profile Image ----------------------------------------------------------------
-const uploadProfile=async(req,res)=>{
-  try{
-    const userId=req.user._id;
-    const filepath=req.file.path;
-    const result=await uploadToCloudinary(filepath);
-    const updatedUser=await User.findByIdAndUpdate(userId,{profileImage:result.secure_url},{new:true});
+ const uploadProfile = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        message: "No file uploaded",
+      });
+    }
+
     res.status(200).json({
-      success:true,
-      message:"Profile image uploaded successfully",
-      user:updatedUser,
+      message: "Image uploaded successfully",
+      imageUrl: `/uploads/${req.file.filename}`,
+      file: req.file,
     });
   } catch (error) {
     res.status(500).json({
-      success: false,
-      message: "Error uploading profile image",
-      error: error.message,
+      message: error.message,
     });
   }
-}
-
+};
 module.exports = {
   createUser,
   getAllUser,

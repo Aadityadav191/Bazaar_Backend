@@ -32,5 +32,4 @@ router.delete("/:id", authMiddleware, DeleteUser);
 //Login User
 router.post("/login", loginUser);
 router.post("/upload-profile", upload.single("image"), uploadProfile);
-
 module.exports = router;
