@@ -1,11 +1,18 @@
-// import cloudinary from "../config/cloudinary.js";
-const cloudinary = require("../config/cloudinary.js");
+const cloudinary = require("../config/cloudinary");
 
 const uploadToCloudinary = async (filePath) => {
-  const result = await cloudinary.uploader.upload(filePath);
+  try {
+    const result = await cloudinary.uploader.upload(filePath, {
+      folder: "users",
+    });
 
-  return result;
+    return result;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
 };
 
-
-module.exports = { uploadToCloudinary };
+module.exports = {
+  uploadToCloudinary,
+};
