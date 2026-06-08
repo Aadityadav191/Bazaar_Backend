@@ -11,11 +11,12 @@ const {
   DeleteUser,
   loginUser,
   uploadProfile,
+  changePassword
 } = require("../controllers/user.Controller.js");
 const router = express.Router();
 
 //Create User
-router.post("/Signup", createUser);
+router.post("/signup", createUser);
 
 //Get All User
 router.get("/allUser", getAllUser);
@@ -34,4 +35,8 @@ router.post("/login", loginUser);
 
 // 'image' is the name of the field sent from the frontend/Postman
 router.post("/upload-profile", upload.single("image"), uploadProfile);  
+
+// Change Password
+router.put("/change-password/:id", changePassword);
+
 module.exports = router;

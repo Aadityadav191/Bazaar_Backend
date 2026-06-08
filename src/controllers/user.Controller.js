@@ -176,6 +176,45 @@ const uploadProfile = async (req, res) => {
     });
   }
 };
+
+// Change Password ----------------------------------------------------------------
+const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // 2. Verify if the old password matches the database
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Incorrect old password",
+      });
+    }
+    // 3. Hash the new password using your existing utility function
+    const hashedNewPassword = await hashPassword(newPassword);
+    // 4. Update and save the new password
+    user.password = hashedNewPassword;
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error changing password",
+      error: error.message,
+    });
+  }
+};
 module.exports = {
   createUser,
   getAllUser,
@@ -184,4 +223,5 @@ module.exports = {
   DeleteUser,
   loginUser,
   uploadProfile,
+  changePassword,
 };
