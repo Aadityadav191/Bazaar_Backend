@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const generateToken = require("../utils/generateToken.js");
 const { hashPassword } = require("../utils/hashPassword.js");
 const { uploadToCloudinary } = require("../utils/cloudinaryUpload");
+const {sendWelcomeEmail }= require("../utils/sendEmail");
 // const errorHandler = require("../middleware/errorHandler");
 
 // Create a new user-------------------------------------------------------------------
@@ -22,8 +23,23 @@ const createUser = async (req, res) => {
     res.status(201).json({
       status: "success",
       message: "User created successfully",
-      user,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        address: user.address,
+        avatar: user.avatar,
+        profilePicture: user.profilePicture,
+      },
     });
+
+    //Send Email to alert account creation 
+   setTimeout(() => {
+     sendWelcomeEmail(user.email, user.name).catch((err) => console.error(err));
+   }, 10000);
+
+
   } catch (error) {
     res
       .status(500)
@@ -121,7 +137,8 @@ const DeleteUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    // email = email.toLowerCase().trim();
+    const user = await User.findOne({ email }).select("+password");
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -145,7 +162,15 @@ const loginUser = async (req, res) => {
       success: true,
       message: "User logged in successfully",
       accessToken: token,
-      user,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        address: user.address,
+        avatar: user.avatar,
+        profilePicture: user.profilePicture,
+      },
     });
   } catch (error) {
     res.status(500).json({
@@ -156,6 +181,7 @@ const loginUser = async (req, res) => {
   }
 };
 
+
 // Upload Profile Image ----------------------------------------------------------------
 const uploadProfile = async (req, res) => {
   try {
@@ -164,11 +190,18 @@ const uploadProfile = async (req, res) => {
         message: "No file uploaded",
       });
     }
+    const cloudinaryResult = await uploadToCloudinary(req.file.path);
+
+    if (!cloudinaryResult) {
+      return res.status(500).json({
+        message: "Failed to store image asset into Cloudinary container system.",
+      });
+    }
     res.status(200).json({
       message: "Image uploaded successfully",
-      imageUrl: req.file.path, // this is for cloudinary storage
-      file: req.file,
+      imageUrl: cloudinaryResult.secure_url, 
     });
+    
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -181,7 +214,13 @@ const uploadProfile = async (req, res) => {
 const changePassword = async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
-    const user = await User.findById(req.params.id);
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Both oldPassword and newPassword fields are strictly required parameters.",
+      });
+    }
+    const user = await User.findById(req.params.id).select("+password");
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -189,7 +228,13 @@ const changePassword = async (req, res) => {
       });
     }
 
-    // 2. Verify if the old password matches the database
+    if (!user.password) {
+      return res.status(500).json({
+        success: false,
+        message: "The target database user record is missing a valid password hash field.",
+      });
+    }
+
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) {
       return res.status(400).json({
@@ -197,9 +242,8 @@ const changePassword = async (req, res) => {
         message: "Incorrect old password",
       });
     }
-    // 3. Hash the new password using your existing utility function
+
     const hashedNewPassword = await hashPassword(newPassword);
-    // 4. Update and save the new password
     user.password = hashedNewPassword;
     await user.save();
 
@@ -211,7 +255,7 @@ const changePassword = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error changing password",
-      error: error.message,
+      error: error.message, 
     });
   }
 };

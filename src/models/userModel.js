@@ -16,15 +16,17 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true,
+    select: false,
   },
   email: {
     type: String,
     required: true,
     unique: true,
+    lowercase: true,
+    trim: true
   },
   address: {
     type: String,
-    required: true,
   },
 });
 

@@ -34,7 +34,7 @@ router.delete("/:id", authMiddleware, DeleteUser);
 router.post("/login", loginUser);
 
 // 'image' is the name of the field sent from the frontend/Postman
-router.post("/upload-profile", upload.single("image"), uploadProfile);  
+router.post("/upload-profile", upload.single("ProfilePic"), uploadProfile);  
 
 // Change Password
 router.put("/change-password/:id", changePassword);
