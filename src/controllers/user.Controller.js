@@ -6,7 +6,6 @@ const generateToken = require("../utils/generateToken.js");
 const { hashPassword } = require("../utils/hashPassword.js");
 const { uploadToCloudinary } = require("../utils/cloudinaryUpload");
 const {sendWelcomeEmail }= require("../utils/sendEmail");
-// const errorHandler = require("../middleware/errorHandler");
 
 // Create a new user-------------------------------------------------------------------
 const createUser = async (req, res) => {
@@ -259,6 +258,9 @@ const changePassword = async (req, res) => {
     });
   }
 };
+
+
+
 module.exports = {
   createUser,
   getAllUser,
