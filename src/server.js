@@ -4,6 +4,8 @@ require('dotenv').config();
 const connectDB=require('./config/db');
 const userRoutes = require('./routes/user.Route.js');
 const helmet = require('helmet');
+const requestLogger = require('./middleware/requestLogger');
+
 
 const app= express();
 
@@ -26,6 +28,8 @@ app.use(cors({
 }));
 app.use(helmet());
 app.use(express.json()) ;
+app.use(requestLogger);
+
 
 
 // User Route

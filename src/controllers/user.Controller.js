@@ -5,7 +5,8 @@ const jwt = require("jsonwebtoken");
 const generateToken = require("../utils/generateToken.js");
 const { hashPassword } = require("../utils/hashPassword.js");
 const { uploadToCloudinary } = require("../utils/cloudinaryUpload");
-const {sendWelcomeEmail }= require("../utils/sendEmail");
+const { sendWelcomeEmail } = require("../utils/sendEmail");
+const logger = require("../config/logger");
 
 // Create a new user-------------------------------------------------------------------
 const createUser = async (req, res) => {
@@ -19,6 +20,7 @@ const createUser = async (req, res) => {
       password: hashedPassword,
       address,
     });
+    logger.info(`User created successfully: ${email}`);
     res.status(201).json({
       status: "success",
       message: "User created successfully",
@@ -33,16 +35,17 @@ const createUser = async (req, res) => {
       },
     });
 
-    //Send Email to alert account creation 
-   setTimeout(() => {
-     sendWelcomeEmail(user.email, user.name).catch((err) => console.error(err));
-   }, 10000);
-
-
+    //Send Email to alert account creation
+    setTimeout(() => {
+      sendWelcomeEmail(user.email, user.name).catch((err) =>
+        console.error(err),
+      );
+    }, 10000);
   } catch (error) {
     res
       .status(500)
       .json({ message: "Error creating user", error: error.message });
+    logger.error(`Error creating user: ${error.message}`);
   }
 };
 
@@ -50,6 +53,7 @@ const createUser = async (req, res) => {
 const getAllUser = async (req, res) => {
   try {
     const users = await User.find();
+    logger.info(`Retrieved ${users.length} users`);
     res.status(200).json({
       status: "success",
       message: "Users retrieved successfully",
@@ -139,6 +143,7 @@ const loginUser = async (req, res) => {
     // email = email.toLowerCase().trim();
     const user = await User.findOne({ email }).select("+password");
     if (!user) {
+      logger.warn(`Login failed: User not found (${email})`);
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -172,6 +177,7 @@ const loginUser = async (req, res) => {
       },
     });
   } catch (error) {
+    logger.warn(`Failed login attempt for email: ${email}`);
     res.status(500).json({
       success: false,
       message: "Error logging in user",
@@ -179,7 +185,6 @@ const loginUser = async (req, res) => {
     });
   }
 };
-
 
 // Upload Profile Image ----------------------------------------------------------------
 const uploadProfile = async (req, res) => {
@@ -193,14 +198,14 @@ const uploadProfile = async (req, res) => {
 
     if (!cloudinaryResult) {
       return res.status(500).json({
-        message: "Failed to store image asset into Cloudinary container system.",
+        message:
+          "Failed to store image asset into Cloudinary container system.",
       });
     }
     res.status(200).json({
       message: "Image uploaded successfully",
-      imageUrl: cloudinaryResult.secure_url, 
+      imageUrl: cloudinaryResult.secure_url,
     });
-    
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -216,7 +221,8 @@ const changePassword = async (req, res) => {
     if (!oldPassword || !newPassword) {
       return res.status(400).json({
         success: false,
-        message: "Both oldPassword and newPassword fields are strictly required parameters.",
+        message:
+          "Both oldPassword and newPassword fields are strictly required parameters.",
       });
     }
     const user = await User.findById(req.params.id).select("+password");
@@ -230,7 +236,8 @@ const changePassword = async (req, res) => {
     if (!user.password) {
       return res.status(500).json({
         success: false,
-        message: "The target database user record is missing a valid password hash field.",
+        message:
+          "The target database user record is missing a valid password hash field.",
       });
     }
 
@@ -254,12 +261,10 @@ const changePassword = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error changing password",
-      error: error.message, 
+      error: error.message,
     });
   }
 };
-
-
 
 module.exports = {
   createUser,
