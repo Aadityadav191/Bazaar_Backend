@@ -1,5 +1,6 @@
 const nodemailer = require("nodemailer");
 const welcomeEmailTemplate = require("../../templates/welcomeEmail.js");
+const forgotPasswordTemplate =require("../../templates/forgotPasswordTemplate.js")
 require("dotenv").config();
 
 const transporter = nodemailer.createTransport({
@@ -30,13 +31,19 @@ const sendWelcomeEmail = async (email, name) => {
 
 
 // ----------------------- Send Reset Password Email ------------------
-const sendResetPasswordEmail = async (email, name, resetLink) => {
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER,
+const sendResetPasswordEmail = async (email, name, otp) => {
+  try{
+    await transporter.sendMail({
+    from: `"Bazaar.com" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: "Reset Your Password - Bazaar.com",
-    html: resetPasswordTemplate(name, resetLink),
+    subject: "Your Password Reset OTP - Bazaar.com",
+    html: forgotPasswordTemplate(name, otp),
   });
+  }
+  catch(error){
+    console.error("Error sending reset password email:", error);
+    throw error;
+  }
 };
 
 

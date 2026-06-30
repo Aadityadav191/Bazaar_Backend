@@ -4,39 +4,42 @@ const upload = require("../middleware/upload.middleware.js");
 const User = require("../models/userModel.js");
 
 const {
-  createUser,
   getAllUser,
   getSingleUser,
   updateUser,
   DeleteUser,
-  loginUser,
   uploadProfile,
-  changePassword
 } = require("../controllers/user.Controller.js");
+const {
+  createUser,
+  loginUser,
+  changePassword,
+  forgotPassword,
+  resetPassword,
+} = require("../controllers/authController.js");
+
 const router = express.Router();
 
-//Create User
+// ==========================================
+// 1. STRICTLY PUBLIC STATIC ROUTES (Put these FIRST)
+// ==========================================
 router.post("/signup", createUser);
-
-//Get All User
-router.get("/allUser", getAllUser);
-
-//Get Single User
-router.get("/:id", getSingleUser);
-
-//Update User
-router.put("/:id", authMiddleware, updateUser);
-
-//Delete User
-router.delete("/:id", authMiddleware, DeleteUser);
-
-//Login User
 router.post("/login", loginUser);
+router.post("/forgot-password", forgotPassword); // Now safe from being hijacked
+router.post("/reset-password", resetPassword);
 
-// 'image' is the name of the field sent from the frontend/Postman
-router.post("/upload-profile", upload.single("ProfilePic"), uploadProfile);  
+// ==========================================
+// 2. PUBLIC DYNAMIC ROUTES (Put these NEXT)
+// ==========================================
+router.get("/allUser", getAllUser);
+router.post("/upload-profile", upload.single("ProfilePic"), uploadProfile);
+router.get("/:id", getSingleUser); // Moved down so it doesn't intercept "/forgot-password"
 
-// Change Password
-router.put("/change-password/:id", changePassword);
+// ==========================================
+// 3. PROTECTED ROUTES (Require authMiddleware)
+// ==========================================
+router.put("/change-password/:id", authMiddleware, changePassword); // Secured!
+router.put("/:id", authMiddleware, updateUser);
+router.delete("/:id", authMiddleware, DeleteUser);
 
 module.exports = router;
